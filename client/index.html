@@ -19,8 +19,24 @@
     <script type="module" src="/src/main.tsx"></script>
     <script
       defer
-      src="%VITE_ANALYTICS_ENDPOINT%/umami"
-      data-website-id="%VITE_ANALYTICS_WEBSITE_ID%"></script>
+      src="import.meta.env.VITE_ANALYTICS_ENDPOINT/umami"
+      data-website-id="import.meta.env.VITE_ANALYTICS_WEBSITE_ID"
+      id="analytics-script"></script>
+    <script>
+      // Set analytics if configured
+      if (window.location.protocol !== 'file:') {
+        const endpoint = '%VITE_ANALYTICS_ENDPOINT%';
+        const websiteId = '%VITE_ANALYTICS_WEBSITE_ID%';
+        const script = document.getElementById('analytics-script');
+        if (endpoint && endpoint !== '%VITE_ANALYTICS_ENDPOINT%' && script) {
+          script.src = endpoint + '/umami';
+          script.dataset.websiteId = websiteId;
+        } else {
+          // Remove script if not configured
+          script?.remove();
+        }
+      }
+    </script>
   </body>
 
 </html>
