@@ -61,12 +61,18 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.lastSignedIn = new Date();
     }
 
-    // Try to update first
+    // Try to update first - specify columns to avoid schema mismatch
     const updateResult = await db
       .update(users)
       .set(updateSet)
       .where(eq(users.openId, user.openId))
-      .returning();
+      .returning({
+        id: users.id,
+        openId: users.openId,
+        name: users.name,
+        email: users.email,
+        role: users.role,
+      });
 
     // If no rows were updated, insert new user
     if (updateResult.length === 0) {

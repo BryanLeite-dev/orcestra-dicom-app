@@ -130,14 +130,20 @@ export const authLocalRouter = router({
       const passwordHash = hashPassword(input.password);
       const openId = `local_${passwordHash}`;
 
-      // Create user
+      // Create user - use returning with specific columns to avoid schema mismatch
       const result = await db.insert(users).values({
         openId,
         name: input.name,
         email: input.email,
         role,
         loginMethod: "local",
-      }).returning();
+      }).returning({
+        id: users.id,
+        openId: users.openId,
+        name: users.name,
+        email: users.email,
+        role: users.role,
+      });
 
       const user = result[0];
       const token = generateToken(user);

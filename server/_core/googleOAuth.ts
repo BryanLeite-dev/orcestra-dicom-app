@@ -86,7 +86,7 @@ router.get("/google/callback", async (req: Request, res: Response) => {
 
     if (!user) {
       console.log("[Google OAuth] Creating new user...");
-      // Criar novo usuário
+      // Criar novo usuário - use returning with specific columns
       const result = await db
         .insert(users)
         .values({
@@ -96,9 +96,16 @@ router.get("/google/callback", async (req: Request, res: Response) => {
           openId: `google_${googleId}`,
           loginMethod: "google",
           role: "user",
-          nivel: "trainee",
         })
-        .returning();
+        .returning({
+          id: users.id,
+          openId: users.openId,
+          googleId: users.googleId,
+          name: users.name,
+          email: users.email,
+          loginMethod: users.loginMethod,
+          role: users.role,
+        });
 
       user = result[0];
       console.log("[Google OAuth] User created:", user?.id, user?.email);
@@ -109,7 +116,15 @@ router.get("/google/callback", async (req: Request, res: Response) => {
         .update(users)
         .set({ googleId, loginMethod: "google" })
         .where(eq(users.id, user.id))
-        .returning();
+        .returning({
+          id: users.id,
+          openId: users.openId,
+          googleId: users.googleId,
+          name: users.name,
+          email: users.email,
+          loginMethod: users.loginMethod,
+          role: users.role,
+        });
 
       user = result[0];
       console.log("[Google OAuth] User updated:", user?.id);
@@ -125,7 +140,15 @@ router.get("/google/callback", async (req: Request, res: Response) => {
         .update(users)
         .set({ openId })
         .where(eq(users.id, user.id))
-        .returning();
+        .returning({
+          id: users.id,
+          openId: users.openId,
+          googleId: users.googleId,
+          name: users.name,
+          email: users.email,
+          loginMethod: users.loginMethod,
+          role: users.role,
+        });
 
       user = result[0];
     }
