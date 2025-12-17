@@ -3,7 +3,7 @@ import { OAuth2Client } from "google-auth-library";
 import jwt from "jsonwebtoken";
 import { getDb } from "../db";
 import { users } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import { getSessionCookieOptions } from "./cookies";
 
@@ -93,28 +93,23 @@ router.get("/google/callback", async (req: Request, res: Response) => {
 
     if (!user) {
       console.log("[Google OAuth] Creating new user...");
-      // Criar novo usuário - use returning with specific columns
-      const result = await db
-        .insert(users)
-        .values({
-          email: email!,
-          name,
-          googleId,
-          openId: `google_${googleId}`,
-          loginMethod: "google",
-          role: "user",
-        })
-        .returning({
-          id: users.id,
-          openId: users.openId,
-          googleId: users.googleId,
-          name: users.name,
-          email: users.email,
-          loginMethod: users.loginMethod,
-          role: users.role,
-        });
+      // Criar novo usuário usando SQL raw para evitar Drizzle inserir todas as colunas do schema
+      const openId = `google_${googleId}`;
+      const result = await db.execute<{
+        id: number;
+        openId: string;
+        googleId: string;
+        name: string;
+        email: string;
+        loginMethod: string;
+        role: string;
+      }>(sql`
+        INSERT INTO users ("openId", "googleId", name, email, "loginMethod", role)
+        VALUES (${openId}, ${googleId}, ${name}, ${email}, 'google', 'user')
+        RETURNING id, "openId", "googleId", name, email, "loginMethod", role
+      `);
 
-      user = result[0];
+      user = result.rows[0];
       console.log("[Google OAuth] User created:", user?.id, user?.email);
     } else if (!user.googleId) {
       console.log("[Google OAuth] Updating existing user with Google ID...");

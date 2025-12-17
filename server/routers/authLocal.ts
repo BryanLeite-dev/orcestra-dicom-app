@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { getDb } from "../db";
 import { users } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import * as crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { router, publicProcedure } from "../_core/trpc";
@@ -130,22 +130,26 @@ export const authLocalRouter = router({
       const passwordHash = hashPassword(input.password);
       const openId = `local_${passwordHash}`;
 
-      // Create user - use returning with specific columns to avoid schema mismatch
-      const result = await db.insert(users).values({
-        openId,
-        name: input.name,
-        email: input.email,
-        role,
-        loginMethod: "local",
-      }).returning({
-        id: users.id,
-        openId: users.openId,
-        name: users.name,
-        email: users.email,
-        role: users.role,
-      });
+      console.log("[Register] Attempting to create user:", { email: input.email, name: input.name, role });
 
-      const user = result[0];
+      // Create user using raw SQL to avoid Drizzle inserting all schema columns
+      // This is necessary because Drizzle ORM inserts ALL columns with defaults,
+      // but the database might not have all columns from the schema
+      const result = await db.execute<{
+        id: number;
+        openId: string;
+        name: string;
+        email: string;
+        role: string;
+      }>(sql`
+        INSERT INTO users ("openId", name, email, "loginMethod", role)
+        VALUES (${openId}, ${input.name}, ${input.email}, 'local', ${role})
+        RETURNING id, "openId", name, email, role
+      `);
+
+      console.log("[Register] User created successfully:", result.rows[0]);
+
+      const user = result.rows[0];
       const token = generateToken(user);
 
       return {
