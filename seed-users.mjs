@@ -26,6 +26,44 @@ async function createTestUsers() {
   console.log('Database URL:', process.env.DATABASE_URL ? 'Set' : 'Not set');
   
   try {
+    // Create Hugo test user (main test user)
+    const hugoPassword = hashPassword('123456789');
+    const hugoOpenId = `local_${hugoPassword}`;
+    
+    const hugoValues = {
+      openId: hugoOpenId,
+      name: 'Hugo Nemet',
+      email: 'hugo.nemet@orcestra.com.br',
+      role: 'user',
+      loginMethod: 'local',
+      nivel: 'trainee',
+      xpTotal: 0,
+      xpSprintAtual: 0,
+      dicoinsSaldo: 0,
+      dicoinsTotalGanho: 0,
+      dicoinsTotalGasto: 0,
+      streakAtual: 0,
+      streakRecorde: 0,
+      temEscudo: false,
+      segundaChanceDisponivel: true,
+    };
+    
+    console.log('Inserting Hugo user...');
+    try {
+      await db.insert(users).values(hugoValues);
+      console.log('✓ Hugo user created (hugo.nemet@orcestra.com.br / 123456789)');
+    } catch (e) {
+      if (e.code === '23505') {
+        console.log('Hugo user already exists, skipping...');
+      } else {
+        throw e;
+      }
+    }
+  } catch (e) {
+    console.error('Error creating Hugo user:', e.message);
+  }
+
+  try {
     // Create membro user
     const membroPassword = hashPassword('senha123');
     const membroOpenId = `local_${membroPassword}`;

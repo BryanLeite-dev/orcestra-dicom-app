@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Production Start Script
- * Runs migrations then starts the server
+ * Runs migrations, seeds data if needed, then starts the server
  */
 
 import { spawn } from "child_process";
@@ -37,6 +37,32 @@ async function runMigrations() {
   });
 }
 
+async function seedData() {
+  return new Promise((resolve, reject) => {
+    console.log("\n🌱 Seeding initial data...");
+    
+    const proc = spawn("node", ["-r", "dotenv/config", "./seed-users-fixed.mjs"], {
+      cwd: __dirname,
+      stdio: "inherit",
+    });
+
+    proc.on("exit", (code) => {
+      if (code === 0) {
+        console.log("✅ Seeding completed successfully!");
+        resolve();
+      } else {
+        console.error(`⚠️  Seeding exited with code ${code} (non-critical)`);
+        resolve(); // Don't reject - seeding failure shouldn't stop the app
+      }
+    });
+
+    proc.on("error", (err) => {
+      console.error("⚠️  Seeding failed (non-critical):", err.message);
+      resolve(); // Don't reject - seeding failure shouldn't stop the app
+    });
+  });
+}
+
 async function startServer() {
   return new Promise(() => {
     console.log("\n🚀 Starting application server...");
@@ -57,6 +83,7 @@ async function startServer() {
 async function main() {
   try {
     await runMigrations();
+    await seedData();
     await startServer();
   } catch (error) {
     console.error("❌ Fatal error:", error.message);
