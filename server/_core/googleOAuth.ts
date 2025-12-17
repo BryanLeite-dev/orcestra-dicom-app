@@ -64,7 +64,22 @@ router.get("/google/callback", async (req: Request, res: Response) => {
     }
 
     console.log("[Google OAuth] Database connected, querying user...");
-    let userRecord = await db.select().from(users).where(eq(users.email, email!)).limit(1);
+    let userRecord = await db
+      .select({
+        id: users.id,
+        openId: users.openId,
+        googleId: users.googleId,
+        name: users.name,
+        email: users.email,
+        loginMethod: users.loginMethod,
+        role: users.role,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        lastSignedIn: users.lastSignedIn,
+      })
+      .from(users)
+      .where(eq(users.email, email!))
+      .limit(1);
     
     let user = userRecord.length > 0 ? userRecord[0] : null;
     console.log("[Google OAuth] User found:", !!user, user?.id);

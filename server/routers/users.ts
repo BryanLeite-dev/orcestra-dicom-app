@@ -41,12 +41,9 @@ export const usersRouter = router({
         .select({
           id: users.id,
           name: users.name,
-          nivel: users.nivel,
-          xpTotal: users.xpTotal,
-          streakAtual: users.streakAtual,
-          streakRecorde: users.streakRecorde,
+          email: users.email,
+          role: users.role,
           coordenadoriaId: users.coordenadoriaId,
-          avatarConfig: users.avatarConfig,
         })
         .from(users)
         .where(eq(users.id, input.id))
