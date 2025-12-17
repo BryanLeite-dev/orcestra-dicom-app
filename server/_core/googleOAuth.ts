@@ -25,6 +25,32 @@ export function getGoogleLoginUrl() {
   return url;
 }
 
+// Debug endpoint to check Google OAuth configuration
+router.get("/google/debug", (req: Request, res: Response) => {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI;
+  
+  const config = {
+    hasClientId: !!clientId,
+    clientIdPrefix: clientId ? clientId.substring(0, 20) + "..." : null,
+    hasClientSecret: !!clientSecret,
+    clientSecretLength: clientSecret ? clientSecret.length : 0,
+    redirectUri: redirectUri || "not set (using default)",
+    defaultRedirectUri: "http://localhost:3000/api/oauth/google/callback",
+    generatedLoginUrl: null as string | null,
+    error: null as string | null,
+  };
+  
+  try {
+    config.generatedLoginUrl = getGoogleLoginUrl();
+  } catch (e: any) {
+    config.error = e.message;
+  }
+  
+  res.json(config);
+});
+
 // Rota para iniciar login com Google (redireciona para o Google)
 router.get("/google/login", (req: Request, res: Response) => {
   const loginUrl = getGoogleLoginUrl();
