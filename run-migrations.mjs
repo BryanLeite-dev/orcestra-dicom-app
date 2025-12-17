@@ -47,39 +47,75 @@ try {
   
   console.log("\n⏳ Criando/atualizando tabela users...");
   
-  // Drop and recreate users table to ensure correct structure
-  // This is safe because there are no users yet
-  await sql`DROP TABLE IF EXISTS users CASCADE`;
-  console.log("  ✓ Tabela antiga removida (se existia)");
-  
-  // Create users table with ALL columns
-  await sql`
-    CREATE TABLE users (
-      id SERIAL PRIMARY KEY,
-      "openId" VARCHAR(128) UNIQUE,
-      "googleId" VARCHAR(128) UNIQUE,
-      name TEXT,
-      email VARCHAR(320) UNIQUE,
-      "loginMethod" VARCHAR(64),
-      role role DEFAULT 'user' NOT NULL,
-      "createdAt" TIMESTAMP DEFAULT NOW() NOT NULL,
-      "updatedAt" TIMESTAMP DEFAULT NOW() NOT NULL,
-      "lastSignedIn" TIMESTAMP DEFAULT NOW() NOT NULL,
-      "coordenadoriaId" INTEGER,
-      nivel nivel DEFAULT 'trainee',
-      "xpTotal" INTEGER DEFAULT 0,
-      "xpSprintAtual" INTEGER DEFAULT 0,
-      "dicoinsSaldo" INTEGER DEFAULT 0,
-      "dicoinsTotalGanho" INTEGER DEFAULT 0,
-      "dicoinsTotalGasto" INTEGER DEFAULT 0,
-      "streakAtual" INTEGER DEFAULT 0,
-      "streakRecorde" INTEGER DEFAULT 0,
-      "temEscudo" BOOLEAN DEFAULT false,
-      "segundaChanceDisponivel" BOOLEAN DEFAULT true,
-      "avatarConfig" JSON
+  // Check if table exists
+  const tableExists = await sql`
+    SELECT EXISTS (
+      SELECT FROM information_schema.tables 
+      WHERE table_schema = 'public' AND table_name = 'users'
     )
   `;
-  console.log("  ✓ Tabela 'users' criada com TODAS as colunas");
+  
+  if (!tableExists[0].exists) {
+    // Create users table with ALL columns
+    await sql`
+      CREATE TABLE users (
+        id SERIAL PRIMARY KEY,
+        "openId" VARCHAR(128) UNIQUE,
+        "googleId" VARCHAR(128) UNIQUE,
+        name TEXT,
+        email VARCHAR(320) UNIQUE,
+        "loginMethod" VARCHAR(64),
+        role role DEFAULT 'user' NOT NULL,
+        "createdAt" TIMESTAMP DEFAULT NOW() NOT NULL,
+        "updatedAt" TIMESTAMP DEFAULT NOW() NOT NULL,
+        "lastSignedIn" TIMESTAMP DEFAULT NOW() NOT NULL,
+        "coordenadoriaId" INTEGER,
+        nivel nivel DEFAULT 'trainee',
+        "xpTotal" INTEGER DEFAULT 0,
+        "xpSprintAtual" INTEGER DEFAULT 0,
+        "dicoinsSaldo" INTEGER DEFAULT 0,
+        "dicoinsTotalGanho" INTEGER DEFAULT 0,
+        "dicoinsTotalGasto" INTEGER DEFAULT 0,
+        "streakAtual" INTEGER DEFAULT 0,
+        "streakRecorde" INTEGER DEFAULT 0,
+        "temEscudo" BOOLEAN DEFAULT false,
+        "segundaChanceDisponivel" BOOLEAN DEFAULT true,
+        "avatarConfig" JSON
+      )
+    `;
+    console.log("  ✓ Tabela 'users' criada com TODAS as colunas");
+  } else {
+    // Table exists - add missing columns
+    console.log("  ✓ Tabela 'users' já existe, verificando colunas...");
+    
+    const addColumnIfNotExists = async (columnName, columnDef) => {
+      const exists = await sql`
+        SELECT EXISTS (
+          SELECT FROM information_schema.columns 
+          WHERE table_schema = 'public' AND table_name = 'users' AND column_name = ${columnName}
+        )
+      `;
+      if (!exists[0].exists) {
+        await sql.unsafe(`ALTER TABLE users ADD COLUMN "${columnName}" ${columnDef}`);
+        console.log(`    + Adicionada coluna '${columnName}'`);
+      }
+    };
+    
+    await addColumnIfNotExists('coordenadoriaId', 'INTEGER');
+    await addColumnIfNotExists('nivel', "nivel DEFAULT 'trainee'");
+    await addColumnIfNotExists('xpTotal', 'INTEGER DEFAULT 0');
+    await addColumnIfNotExists('xpSprintAtual', 'INTEGER DEFAULT 0');
+    await addColumnIfNotExists('dicoinsSaldo', 'INTEGER DEFAULT 0');
+    await addColumnIfNotExists('dicoinsTotalGanho', 'INTEGER DEFAULT 0');
+    await addColumnIfNotExists('dicoinsTotalGasto', 'INTEGER DEFAULT 0');
+    await addColumnIfNotExists('streakAtual', 'INTEGER DEFAULT 0');
+    await addColumnIfNotExists('streakRecorde', 'INTEGER DEFAULT 0');
+    await addColumnIfNotExists('temEscudo', 'BOOLEAN DEFAULT false');
+    await addColumnIfNotExists('segundaChanceDisponivel', 'BOOLEAN DEFAULT true');
+    await addColumnIfNotExists('avatarConfig', 'JSON');
+    
+    console.log("  ✓ Colunas verificadas/adicionadas");
+  }
   
   // Verify table structure
   const columns = await sql`
