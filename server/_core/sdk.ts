@@ -287,6 +287,18 @@ class SDKServer {
                 createdAt: usersTable.createdAt,
                 updatedAt: usersTable.updatedAt,
                 lastSignedIn: usersTable.lastSignedIn,
+                coordenadoriaId: usersTable.coordenadoriaId,
+                nivel: usersTable.nivel,
+                xpTotal: usersTable.xpTotal,
+                xpSprintAtual: usersTable.xpSprintAtual,
+                dicoinsSaldo: usersTable.dicoinsSaldo,
+                dicoinsTotalGanho: usersTable.dicoinsTotalGanho,
+                dicoinsTotalGasto: usersTable.dicoinsTotalGasto,
+                streakAtual: usersTable.streakAtual,
+                streakRecorde: usersTable.streakRecorde,
+                temEscudo: usersTable.temEscudo,
+                segundaChanceDisponivel: usersTable.segundaChanceDisponivel,
+                avatarConfig: usersTable.avatarConfig,
               })
               .from(usersTable)
               .where(eqFunc(usersTable.id, userId));

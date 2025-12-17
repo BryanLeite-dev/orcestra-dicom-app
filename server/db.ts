@@ -100,7 +100,7 @@ export async function getUserByOpenId(openId: string) {
     return undefined;
   }
 
-  // Select only essential columns to avoid schema mismatch
+  // Select all columns including gamification fields
   const result = await db
     .select({
       id: users.id,
@@ -113,6 +113,18 @@ export async function getUserByOpenId(openId: string) {
       createdAt: users.createdAt,
       updatedAt: users.updatedAt,
       lastSignedIn: users.lastSignedIn,
+      coordenadoriaId: users.coordenadoriaId,
+      nivel: users.nivel,
+      xpTotal: users.xpTotal,
+      xpSprintAtual: users.xpSprintAtual,
+      dicoinsSaldo: users.dicoinsSaldo,
+      dicoinsTotalGanho: users.dicoinsTotalGanho,
+      dicoinsTotalGasto: users.dicoinsTotalGasto,
+      streakAtual: users.streakAtual,
+      streakRecorde: users.streakRecorde,
+      temEscudo: users.temEscudo,
+      segundaChanceDisponivel: users.segundaChanceDisponivel,
+      avatarConfig: users.avatarConfig,
     })
     .from(users)
     .where(eq(users.openId, openId))
