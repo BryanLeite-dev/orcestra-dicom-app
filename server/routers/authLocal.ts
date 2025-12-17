@@ -137,18 +137,6 @@ export const authLocalRouter = router({
         email: input.email,
         role,
         loginMethod: "local",
-        coordenadoriaId: null,
-        nivel: "trainee",
-        xpTotal: 0,
-        xpSprintAtual: 0,
-        dicoinsSaldo: 0,
-        dicoinsTotalGanho: 0,
-        dicoinsTotalGasto: 0,
-        streakAtual: 0,
-        streakRecorde: 0,
-        temEscudo: false,
-        segundaChanceDisponivel: true,
-        avatarConfig: null,
       }).returning();
 
       const user = result[0];
