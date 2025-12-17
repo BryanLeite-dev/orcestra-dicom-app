@@ -53,9 +53,24 @@ router.get("/google/debug", (req: Request, res: Response) => {
 
 // Rota para iniciar login com Google (redireciona para o Google)
 router.get("/google/login", (req: Request, res: Response) => {
-  const loginUrl = getGoogleLoginUrl();
-  console.log("[Google OAuth] Redirecting to Google:", loginUrl);
-  res.redirect(loginUrl);
+  try {
+    const loginUrl = getGoogleLoginUrl();
+    console.log("[Google OAuth] /google/login hit! Redirecting to:", loginUrl);
+    
+    // Use 302 redirect explicitly
+    res.redirect(302, loginUrl);
+  } catch (error: any) {
+    console.error("[Google OAuth] Error generating login URL:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Test endpoint to verify routing works
+router.get("/google/test", (req: Request, res: Response) => {
+  res.json({ 
+    message: "Google OAuth test route works!",
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Callback do Google OAuth
