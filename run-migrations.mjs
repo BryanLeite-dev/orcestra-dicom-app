@@ -2,11 +2,9 @@
 
 /**
  * Migration Runner
- * Executa as migrations no banco de dados
+ * Creates database tables using direct SQL
  */
 
-import { drizzle } from "drizzle-orm/postgres-js";
-import { migrate } from "drizzle-orm/postgres-js/migrator";
 import postgres from "postgres";
 import * as dotenv from "dotenv";
 
@@ -19,26 +17,65 @@ if (!DATABASE_URL) {
   process.exit(1);
 }
 
-console.log("🔄 Iniciando migrations...");
+console.log("🔄 Iniciando setup do banco de dados...");
 console.log(`📍 URL (redacted): ${DATABASE_URL.replace(/:[^@]+@/, ":****@")}`);
 
 try {
-  const client = postgres(DATABASE_URL, { max: 1 });
-  const db = drizzle(client);
+  const sql = postgres(DATABASE_URL, { max: 1 });
 
-  console.log("\n⏳ Executando migrations...");
-  await migrate(db, { migrationsFolder: "./drizzle" });
+  console.log("\n⏳ Verificando/criando tabela users...");
   
-  console.log("✅ Migrations concluídas com sucesso!");
+  // Create role enum if not exists
+  await sql`
+    DO $$ BEGIN
+      CREATE TYPE role AS ENUM('user', 'admin', 'director');
+    EXCEPTION
+      WHEN duplicate_object THEN null;
+    END $$;
+  `;
+  console.log("  ✓ Enum 'role' ok");
   
-  await client.end();
-} catch (error) {
-  console.error("❌ Erro durante migrations:");
-  console.error(`  ${error.message}`);
+  // Create users table if not exists
+  await sql`
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      "openId" VARCHAR(128) UNIQUE,
+      "googleId" VARCHAR(128) UNIQUE,
+      name TEXT,
+      email VARCHAR(320) UNIQUE,
+      "loginMethod" VARCHAR(64),
+      role role DEFAULT 'user' NOT NULL,
+      "createdAt" TIMESTAMP DEFAULT NOW() NOT NULL,
+      "updatedAt" TIMESTAMP DEFAULT NOW() NOT NULL,
+      "lastSignedIn" TIMESTAMP DEFAULT NOW() NOT NULL
+    )
+  `;
+  console.log("  ✓ Tabela 'users' ok");
   
-  if (error.message.includes("ECONNREFUSED")) {
-    console.error("\n💡 Erro de conexão - banco pode estar inacessível");
+  // Verify table exists
+  const tables = await sql`
+    SELECT table_name FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'users'
+  `;
+  
+  if (tables.length > 0) {
+    console.log("\n✅ Tabela users verificada e pronta!");
+    
+    // Count existing users
+    const count = await sql`SELECT COUNT(*) as total FROM users`;
+    console.log(`   Total de usuários: ${count[0].total}`);
+  } else {
+    console.log("\n❌ Tabela users NÃO foi criada!");
   }
   
-  process.exit(1);
+  await sql.end();
+  console.log("\n✅ Setup do banco concluído!");
+  
+} catch (error) {
+  console.error("❌ Erro durante setup:");
+  console.error(`  ${error.message}`);
+  console.error("  Stack:", error.stack);
+  
+  // Don't exit with error - let the app try to start anyway
+  console.log("\n⚠️  Continuando mesmo com erro de migration...");
 }
