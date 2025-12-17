@@ -44,9 +44,15 @@ export const authLocalRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
-      // Find user by email
+      // Find user by email - select only essential columns to avoid schema mismatch
       const user = await db
-        .select()
+        .select({
+          id: users.id,
+          openId: users.openId,
+          email: users.email,
+          name: users.name,
+          role: users.role,
+        })
         .from(users)
         .where(eq(users.email, input.email))
         .limit(1);
@@ -99,7 +105,10 @@ export const authLocalRouter = router({
 
       // Check if email already exists
       const existingUser = await db
-        .select()
+        .select({
+          id: users.id,
+          email: users.email,
+        })
         .from(users)
         .where(eq(users.email, input.email))
         .limit(1);

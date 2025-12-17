@@ -94,7 +94,23 @@ export async function getUserByOpenId(openId: string) {
     return undefined;
   }
 
-  const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
+  // Select only essential columns to avoid schema mismatch
+  const result = await db
+    .select({
+      id: users.id,
+      openId: users.openId,
+      googleId: users.googleId,
+      name: users.name,
+      email: users.email,
+      loginMethod: users.loginMethod,
+      role: users.role,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
+      lastSignedIn: users.lastSignedIn,
+    })
+    .from(users)
+    .where(eq(users.openId, openId))
+    .limit(1);
 
   return result.length > 0 ? result[0] : undefined;
 }

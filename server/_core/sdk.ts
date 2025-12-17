@@ -272,11 +272,22 @@ class SDKServer {
           const database = await db.getDb();
           if (database) {
             // Import at top level to avoid issues
-            const usersTable = (await import("../../drizzle/schema")).users;
-            const eqFunc = (await import("drizzle-orm")).eq;
+            const { users: usersTable } = await import("../../drizzle/schema");
+            const { eq: eqFunc } = await import("drizzle-orm");
             
             const foundUsers = await database
-              .select()
+              .select({
+                id: usersTable.id,
+                openId: usersTable.openId,
+                googleId: usersTable.googleId,
+                name: usersTable.name,
+                email: usersTable.email,
+                loginMethod: usersTable.loginMethod,
+                role: usersTable.role,
+                createdAt: usersTable.createdAt,
+                updatedAt: usersTable.updatedAt,
+                lastSignedIn: usersTable.lastSignedIn,
+              })
               .from(usersTable)
               .where(eqFunc(usersTable.id, userId));
             
