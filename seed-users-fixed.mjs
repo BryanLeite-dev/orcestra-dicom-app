@@ -75,16 +75,12 @@ async function createTestUsers() {
     
     console.log('📝 Creating Hugo user...');
     try {
-      // Use raw SQL insert since importing .ts files is problematic
+      // Use raw SQL insert with all columns
       const result = await client`
         INSERT INTO users (
-          "openId", "name", "email", "role", "loginMethod", "nivel",
-          "xpTotal", "xpSprintAtual", "dicoinsSaldo", "dicoinsTotalGanho",
-          "dicoinsTotalGasto", "streakAtual", "streakRecorde", "temEscudo",
-          "segundaChanceDisponivel"
+          "openId", "name", "email", "role", "loginMethod"
         ) VALUES (
-          ${hugoOpenId}, 'Hugo Nemet', 'hugo.nemet@orcestra.com.br', 'user', 'local', 'trainee',
-          0, 0, 0, 0, 0, 0, 0, false, true
+          ${hugoOpenId}, 'Hugo Nemet', 'hugo.nemet@orcestra.com.br', 'user', 'local'
         )
         ON CONFLICT DO NOTHING
         RETURNING id, email
@@ -109,13 +105,9 @@ async function createTestUsers() {
       
       const result = await client`
         INSERT INTO users (
-          "openId", "name", "email", "role", "loginMethod", "nivel",
-          "xpTotal", "xpSprintAtual", "dicoinsSaldo", "dicoinsTotalGanho",
-          "dicoinsTotalGasto", "streakAtual", "streakRecorde", "temEscudo",
-          "segundaChanceDisponivel"
+          "openId", "name", "email", "role", "loginMethod"
         ) VALUES (
-          ${diretorOpenId}, 'Diretor Teste', 'diretor@test.com', 'director', 'local', 'virtuoso',
-          1000, 100, 500, 1000, 500, 5, 10, true, true
+          ${diretorOpenId}, 'Diretor Teste', 'diretor@test.com', 'director', 'local'
         )
         ON CONFLICT DO NOTHING
         RETURNING id, email
@@ -140,13 +132,9 @@ async function createTestUsers() {
       
       const result = await client`
         INSERT INTO users (
-          "openId", "name", "email", "role", "loginMethod", "nivel",
-          "xpTotal", "xpSprintAtual", "dicoinsSaldo", "dicoinsTotalGanho",
-          "dicoinsTotalGasto", "streakAtual", "streakRecorde", "temEscudo",
-          "segundaChanceDisponivel"
+          "openId", "name", "email", "role", "loginMethod"
         ) VALUES (
-          ${membroOpenId}, 'Membro Teste', 'membro@test.com', 'user', 'local', 'trainee',
-          0, 0, 0, 0, 0, 0, 0, false, true
+          ${membroOpenId}, 'Membro Teste', 'membro@test.com', 'user', 'local'
         )
         ON CONFLICT DO NOTHING
         RETURNING id, email
