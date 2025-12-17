@@ -68,9 +68,10 @@ export const authLocalRouter = router({
         throw new Error("Este usuário não foi registrado com email e senha");
       }
 
-      // Verify password
-      const passwordHash = foundUser.openId.replace("local_", "");
-      if (!verifyPassword(input.password, passwordHash)) {
+      // Verify password - hash includes email for uniqueness
+      const expectedHash = hashPassword(input.email + input.password);
+      const storedHash = foundUser.openId.replace("local_", "");
+      if (expectedHash !== storedHash) {
         throw new Error("Email ou senha inválidos");
       }
 
@@ -126,11 +127,11 @@ export const authLocalRouter = router({
         role = "director";
       }
 
-      // Hash password and create openId
-      const passwordHash = hashPassword(input.password);
+      // Hash password with email to create unique openId per user
+      const passwordHash = hashPassword(input.email + input.password);
       const openId = `local_${passwordHash}`;
 
-      console.log("[Register] Attempting to create user:", { email: input.email, name: input.name, role });
+      console.log("[Register] Attempting to create user:", { email: input.email, name: input.name, role, openId });
 
       // Create user using raw SQL to avoid Drizzle inserting all schema columns
       try {
