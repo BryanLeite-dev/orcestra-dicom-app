@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Orcestra DiCoM</string>
+    <string name="title_activity_main">Orcestra DiCoM</string>
+    <string name="package_name">com.orcestra.dicom</string>
+    <string name="custom_url_scheme">com.orcestra.dicom</string>
+</resources>
