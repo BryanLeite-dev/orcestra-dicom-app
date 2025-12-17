@@ -11,6 +11,7 @@ services:
       - key: NODE_VERSION
         value: 22.16.0
       - key: DATABASE_URL
+        value: postgresql://orcestra_dicom_db_user:r5HkEUDJiUQA7DX9AvsDAoWfANQHrPdc@dpg-d512i87gi27c73e2h27g-a/orcestra_dicom_db
         sync: false
       - key: GOOGLE_REDIRECT_URI
         value: https://orcestra-dicom-app.onrender.com/api/oauth/google/callback
