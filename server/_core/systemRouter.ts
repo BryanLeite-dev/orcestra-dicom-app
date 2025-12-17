@@ -23,34 +23,38 @@ export const systemRouter = router({
         return { connected: false, error: "Database not available" };
       }
 
-      // Check if users table exists
-      const tablesResult = await db.execute(sql`
+      // Check if users table exists - db.execute returns array directly in Drizzle
+      const tablesResult: any = await db.execute(sql`
         SELECT table_name FROM information_schema.tables 
         WHERE table_schema = 'public'
         ORDER BY table_name
       `);
-      const tables = tablesResult.rows.map((r: any) => r.table_name);
+      // Handle both formats: array directly or { rows: [] }
+      const tablesData = Array.isArray(tablesResult) ? tablesResult : (tablesResult.rows || []);
+      const tables = tablesData.map((r: any) => r.table_name);
 
       // Check users table columns
       let userColumns: string[] = [];
       if (tables.includes('users')) {
-        const columnsResult = await db.execute(sql`
+        const columnsResult: any = await db.execute(sql`
           SELECT column_name FROM information_schema.columns 
           WHERE table_schema = 'public' AND table_name = 'users'
           ORDER BY ordinal_position
         `);
-        userColumns = columnsResult.rows.map((r: any) => r.column_name);
+        const columnsData = Array.isArray(columnsResult) ? columnsResult : (columnsResult.rows || []);
+        userColumns = columnsData.map((r: any) => r.column_name);
       }
 
       // Check enums
-      const enumsResult = await db.execute(sql`
+      const enumsResult: any = await db.execute(sql`
         SELECT typname, enumlabel 
         FROM pg_enum e 
         JOIN pg_type t ON e.enumtypid = t.oid
         ORDER BY typname, enumsortorder
       `);
+      const enumsData = Array.isArray(enumsResult) ? enumsResult : (enumsResult.rows || []);
       const enums: Record<string, string[]> = {};
-      for (const row of enumsResult.rows as any[]) {
+      for (const row of enumsData) {
         if (!enums[row.typname]) enums[row.typname] = [];
         enums[row.typname].push(row.enumlabel);
       }
@@ -58,8 +62,9 @@ export const systemRouter = router({
       // Count users
       let userCount = 0;
       if (tables.includes('users')) {
-        const countResult = await db.execute(sql`SELECT COUNT(*) as count FROM users`);
-        userCount = Number((countResult.rows[0] as any).count);
+        const countResult: any = await db.execute(sql`SELECT COUNT(*) as count FROM users`);
+        const countData = Array.isArray(countResult) ? countResult : (countResult.rows || []);
+        userCount = Number(countData[0]?.count || 0);
       }
 
       return {
@@ -70,12 +75,17 @@ export const systemRouter = router({
         userColumnCount: userColumns.length,
         enums,
         userCount,
+        debug: {
+          tablesResultType: typeof tablesResult,
+          isArray: Array.isArray(tablesResult),
+        }
       };
     } catch (error: any) {
       return {
         connected: false,
         error: error.message,
         code: error.code,
+        stack: error.stack?.split('\n').slice(0, 5),
       };
     }
   }),
