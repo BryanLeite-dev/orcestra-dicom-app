@@ -57,10 +57,43 @@ router.get("/google/login", (req: Request, res: Response) => {
     const loginUrl = getGoogleLoginUrl();
     console.log("[Google OAuth] /google/login hit! Redirecting to:", loginUrl);
     
+    // Prevent caching
+    res.set({
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    });
+    
     // Use 302 redirect explicitly
     res.redirect(302, loginUrl);
   } catch (error: any) {
     console.error("[Google OAuth] Error generating login URL:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Alternative login route using HTML redirect (in case res.redirect doesn't work)
+router.get("/google/start", (req: Request, res: Response) => {
+  try {
+    const loginUrl = getGoogleLoginUrl();
+    console.log("[Google OAuth] /google/start hit! URL:", loginUrl);
+    
+    // Send HTML that redirects
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta http-equiv="refresh" content="0;url=${loginUrl}">
+          <script>window.location.href = "${loginUrl}";</script>
+        </head>
+        <body>
+          <p>Redirecionando para o Google...</p>
+          <p>Se não redirecionar automaticamente, <a href="${loginUrl}">clique aqui</a>.</p>
+        </body>
+      </html>
+    `);
+  } catch (error: any) {
+    console.error("[Google OAuth] Error:", error);
     res.status(500).json({ error: error.message });
   }
 });
