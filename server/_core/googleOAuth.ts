@@ -28,12 +28,15 @@ export function getGoogleLoginUrl() {
 // Callback do Google OAuth
 router.get("/google/callback", async (req: Request, res: Response) => {
   try {
+    console.log("[Google OAuth] Callback initiated");
     const { code } = req.query;
 
     if (!code || typeof code !== "string") {
+      console.error("[Google OAuth] Missing authorization code");
       return res.status(400).json({ error: "Missing authorization code" });
     }
 
+    console.log("[Google OAuth] Exchanging code for tokens...");
     // Trocar código por tokens
     const { tokens } = await googleClient.getToken(code);
     const ticket = await googleClient.verifyIdToken({
@@ -43,6 +46,7 @@ router.get("/google/callback", async (req: Request, res: Response) => {
 
     const payload = ticket.getPayload();
     if (!payload) {
+      console.error("[Google OAuth] Invalid token payload");
       return res.status(400).json({ error: "Invalid token" });
     }
 
@@ -50,17 +54,23 @@ router.get("/google/callback", async (req: Request, res: Response) => {
     const email = payload.email;
     const name = payload.name || email?.split("@")[0] || "User";
 
+    console.log("[Google OAuth] User info retrieved:", { email, name, googleId });
+
     // Procurar ou criar usuário
     const db = await getDb();
     if (!db) {
+      console.error("[Google OAuth] Database unavailable!");
       return res.status(500).json({ error: "Database unavailable" });
     }
 
+    console.log("[Google OAuth] Database connected, querying user...");
     let userRecord = await db.select().from(users).where(eq(users.email, email!)).limit(1);
     
     let user = userRecord.length > 0 ? userRecord[0] : null;
+    console.log("[Google OAuth] User found:", !!user, user?.id);
 
     if (!user) {
+      console.log("[Google OAuth] Creating new user...");
       // Criar novo usuário
       const result = await db
         .insert(users)
@@ -76,7 +86,9 @@ router.get("/google/callback", async (req: Request, res: Response) => {
         .returning();
 
       user = result[0];
+      console.log("[Google OAuth] User created:", user?.id, user?.email);
     } else if (!user.googleId) {
+      console.log("[Google OAuth] Updating existing user with Google ID...");
       // Atualizar usuário existente com Google ID
       const result = await db
         .update(users)
@@ -85,6 +97,7 @@ router.get("/google/callback", async (req: Request, res: Response) => {
         .returning();
 
       user = result[0];
+      console.log("[Google OAuth] User updated:", user?.id);
     }
 
     // Criar JWT session usando a SDK

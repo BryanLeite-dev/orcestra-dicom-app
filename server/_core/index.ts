@@ -8,6 +8,15 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { handleLeadWebhook } from "../webhooks/leads";
+import { ENV } from "./env";
+
+// Debug environment variables on startup
+console.log("[Server] Environment loaded:");
+console.log("[Server] NODE_ENV:", process.env.NODE_ENV);
+console.log("[Server] DATABASE_URL:", process.env.DATABASE_URL ? "✓ configured" : "✗ NOT configured");
+console.log("[Server] GOOGLE_CLIENT_ID:", process.env.GOOGLE_CLIENT_ID ? "✓ configured" : "✗ NOT configured");
+console.log("[Server] GOOGLE_CLIENT_SECRET:", process.env.GOOGLE_CLIENT_SECRET ? "✓ configured" : "✗ NOT configured");
+console.log("[Server] JWT_SECRET:", process.env.JWT_SECRET ? "✓ configured" : "✗ NOT configured");
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -61,6 +70,24 @@ async function startServer() {
   if (port !== preferredPort) {
     console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
   }
+
+  // Health check endpoint to verify database connection
+  app.get("/api/health", async (req, res) => {
+    try {
+      const { getDb } = await import("../db");
+      const db = await getDb();
+      if (db) {
+        console.log("[Health] Database connected ✓");
+        res.json({ status: "ok", database: "connected" });
+      } else {
+        console.error("[Health] Database connection failed");
+        res.status(503).json({ status: "error", database: "disconnected", databaseUrl: process.env.DATABASE_URL ? "set" : "not set" });
+      }
+    } catch (error) {
+      console.error("[Health] Health check error:", error);
+      res.status(500).json({ status: "error", error: (error as any).message });
+    }
+  });
 
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
