@@ -28,7 +28,7 @@ services:
       
       # Frontend-specific vars (VITE_ prefix required for browser access)
       - key: VITE_GOOGLE_CLIENT_ID
-        sync: false
+        value: 214977543278-bvcpg5utb181ba3kc7g41m351ecks7up.apps.googleusercontent.com
       - key: VITE_OAUTH_PORTAL_URL
         sync: false
       - key: VITE_APP_ID
