@@ -145,10 +145,13 @@ router.get("/google/callback", async (req: Request, res: Response) => {
   }
 });
 
-// Rota para iniciar login com Google
-router.get("/google/login", (req: Request, res: Response) => {
-  const loginUrl = getGoogleLoginUrl();
-  res.json({ loginUrl });
+// Rota para logout
+router.get("/google/logout", (req: Request, res: Response) => {
+  res.clearCookie(COOKIE_NAME, { path: "/" });
+  res.clearCookie("auth", { path: "/" });
+  res.clearCookie("session", { path: "/" });
+  console.log("[Google OAuth] User logged out");
+  res.redirect("/");
 });
 
 export default router;

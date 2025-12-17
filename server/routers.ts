@@ -19,6 +19,14 @@ export const appRouter = router({
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+      
+      // Also clear any other auth cookies
+      ctx.res.clearCookie("auth", { path: "/" });
+      ctx.res.clearCookie("session", { path: "/" });
+      ctx.res.clearCookie("authToken", { path: "/" });
+      
+      console.log("[Logout] Session cleared for user");
+      
       return {
         success: true,
       } as const;

@@ -36,8 +36,21 @@ export function useAuth(options?: UseAuthOptions) {
       }
       throw error;
     } finally {
+      // Clear all auth data from localStorage
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("user");
+      localStorage.removeItem("manus-runtime-user-info");
+      
+      // Clear cookies by setting max-age to 0
+      document.cookie = "session=; max-age=0; path=/;";
+      document.cookie = "auth=; max-age=0; path=/;";
+      
+      // Clear tRPC cache
       utils.auth.me.setData(undefined, null);
       await utils.auth.me.invalidate();
+      
+      // Redirect to login
+      window.location.href = getLoginUrl();
     }
   }, [logoutMutation, utils]);
 
