@@ -133,35 +133,40 @@ export const authLocalRouter = router({
       console.log("[Register] Attempting to create user:", { email: input.email, name: input.name, role });
 
       // Create user using raw SQL to avoid Drizzle inserting all schema columns
-      // This is necessary because Drizzle ORM inserts ALL columns with defaults,
-      // but the database might not have all columns from the schema
-      const result = await db.execute<{
-        id: number;
-        openId: string;
-        name: string;
-        email: string;
-        role: string;
-      }>(sql`
-        INSERT INTO users ("openId", name, email, "loginMethod", role)
-        VALUES (${openId}, ${input.name}, ${input.email}, 'local', ${role})
-        RETURNING id, "openId", name, email, role
-      `);
+      try {
+        const result = await db.execute<{
+          id: number;
+          openId: string;
+          name: string;
+          email: string;
+          role: string;
+        }>(sql`
+          INSERT INTO users ("openId", name, email, "loginMethod", role)
+          VALUES (${openId}, ${input.name}, ${input.email}, 'local', ${role})
+          RETURNING id, "openId", name, email, role
+        `);
 
-      console.log("[Register] User created successfully:", result.rows[0]);
+        console.log("[Register] User created successfully:", result.rows[0]);
 
-      const user = result.rows[0];
-      const token = generateToken(user);
+        const user = result.rows[0];
+        const token = generateToken(user);
 
-      return {
-        success: true,
-        token,
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-        },
-      };
+        return {
+          success: true,
+          token,
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          },
+        };
+      } catch (insertError: any) {
+        console.error("[Register] INSERT failed with error:", insertError.message);
+        console.error("[Register] Error code:", insertError.code);
+        console.error("[Register] Error detail:", insertError.detail);
+        throw new Error(`Falha ao criar usuário: ${insertError.message}`);
+      }
     }),
 
   verifyToken: publicProcedure
