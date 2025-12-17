@@ -25,6 +25,13 @@ export function getGoogleLoginUrl() {
   return url;
 }
 
+// Rota para iniciar login com Google (redireciona para o Google)
+router.get("/google/login", (req: Request, res: Response) => {
+  const loginUrl = getGoogleLoginUrl();
+  console.log("[Google OAuth] Redirecting to Google:", loginUrl);
+  res.redirect(loginUrl);
+});
+
 // Callback do Google OAuth
 router.get("/google/callback", async (req: Request, res: Response) => {
   try {

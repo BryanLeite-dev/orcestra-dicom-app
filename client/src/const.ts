@@ -16,25 +16,8 @@ export const getLoginUrl = () => {
   return url.toString();
 };
 
-// Generate Google login URL
+// Generate Google login URL - use server endpoint to avoid VITE_ env issues
 export const getGoogleLoginUrl = () => {
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-  if (!googleClientId) {
-    console.error("VITE_GOOGLE_CLIENT_ID not configured");
-    return null;
-  }
-
-  const redirectUri = `${window.location.origin}/api/oauth/google/callback`;
-  const scope = ["openid", "email", "profile"].join(" ");
-  const responseType = "code";
-  const accessType = "online";
-
-  const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
-  url.searchParams.set("client_id", googleClientId);
-  url.searchParams.set("redirect_uri", redirectUri);
-  url.searchParams.set("response_type", responseType);
-  url.searchParams.set("scope", scope);
-  url.searchParams.set("access_type", accessType);
-
-  return url.toString();
+  // Simply redirect to server endpoint which handles the OAuth flow
+  return `${window.location.origin}/api/oauth/google/login`;
 };

@@ -133,11 +133,7 @@ export default function Login() {
 
   const handleGoogleLogin = () => {
     const googleLoginUrl = getGoogleLoginUrl();
-    if (googleLoginUrl) {
-      window.location.href = googleLoginUrl;
-    } else {
-      toast.error("Google OAuth não está configurado");
-    }
+    window.location.href = googleLoginUrl;
   };
 
   return (
