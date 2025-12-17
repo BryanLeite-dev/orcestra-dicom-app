@@ -98,6 +98,17 @@ router.get("/google/start", (req: Request, res: Response) => {
   }
 });
 
+// Initiate Google OAuth - named differently to avoid any caching issues
+router.get("/initiate", (req: Request, res: Response) => {
+  try {
+    const loginUrl = getGoogleLoginUrl();
+    console.log("[Google OAuth] /initiate hit! URL:", loginUrl);
+    res.redirect(302, loginUrl);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Test endpoint to verify routing works
 router.get("/google/test", (req: Request, res: Response) => {
   res.json({ 

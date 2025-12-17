@@ -18,6 +18,6 @@ export const getLoginUrl = () => {
 
 // Generate Google login URL - use server endpoint to avoid VITE_ env issues
 export const getGoogleLoginUrl = () => {
-  // Use /start endpoint which uses HTML redirect as fallback
-  return `${window.location.origin}/api/oauth/google/start`;
+  // Use /initiate endpoint 
+  return `${window.location.origin}/api/oauth/initiate`;
 };
